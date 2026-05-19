@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Suk Sook Shabu - จัดการเมนู</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-slate-100 text-slate-900">
+    <div class="bg-red-700 text-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-2xl font-bold tracking-wide">Suk Sook Shabu</h1>
+          <p class="text-sm text-red-100">ระบบจัดการร้านชาบู/หมูกระทะ</p>
+        </div>
+        <nav class="flex gap-3">
+          <a href="/" class="rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/20">Dashboard</a>
+          <a href="/menu" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">จัดการเมนู (CRUD)</a>
+        </nav>
+      </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="mb-6 space-y-3">
+            {% for msg in messages %}
+              <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ msg }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="grid gap-6 xl:grid-cols-[380px_1fr]">
+        <section class="rounded-3xl bg-white p-6 shadow-sm">
+          <h2 class="text-xl font-semibold text-slate-900">เพิ่มเมนูใหม่</h2>
+          <p class="mt-1 text-sm text-slate-500">กรอกข้อมูลเมนูเพื่อเพิ่มลงระบบ</p>
+          <form action="/menu/add" method="post" class="mt-6 space-y-4">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-slate-700">ชื่อเมนู</label>
+              <input name="menu_name" placeholder="เช่น เนื้อหมู สไลด์" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100" required />
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-slate-700">หมวดหมู่</label>
+              <select name="category" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100">
+                <option value="">เลือกหมวดหมู่</option>
+                {% for category in categories %}
+                  <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-slate-700">ลิงก์รูปภาพ (URL)</label>
+              <input name="image_url" placeholder="เช่น https://..." class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100" />
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-slate-700">ราคา (บาท)</label>
+              <input name="price" placeholder="เช่น 120" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100" required />
+            </div>
+            <button type="submit" class="w-full rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">บันทึกเมนู</button>
+          </form>
+        </section>
+
+        <section class="rounded-3xl bg-white p-6 shadow-sm">
+          <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-900">รายการอาหารในคลังปัจจุบัน</h2>
+              <p class="text-sm text-slate-500">แก้ไขข้อมูลหรือ ลบเมนูได้จากตารางนี้</p>
+            </div>
+            <span class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">ทั้งหมด {{ menus|length }} เมนู</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="px-4 py-3 text-left font-semibold">ID</th>
+                  <th class="px-4 py-3 text-left font-semibold">รูปภาพ</th>
+                  <th class="px-4 py-3 text-left font-semibold">ชื่อเมนู</th>
+                  <th class="px-4 py-3 text-left font-semibold">หมวดหมู่</th>
+                  <th class="px-4 py-3 text-left font-semibold">ราคา</th>
+                  <th class="px-4 py-3 text-left font-semibold">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">
+                {% if menus %}
+                  {% for m in menus %}
+                  <tr class="bg-white hover:bg-slate-50">
+                    <td class="px-4 py-4 align-top text-slate-700">{{ loop.index }}</td>
+                    <td class="px-4 py-4 align-top">
+                      {% if m.image_url %}
+                        <img src="{{ m.image_url }}" alt="{{ m.menu_name }}" class="w-16 h-16 object-cover rounded-lg shadow-sm">
+                      {% endif %}
+                    </td>
+                    <td class="px-4 py-4 align-top text-slate-800">
+                      {{ m.menu_name }}
+                    </td>
+                    <td class="px-4 py-4 align-top text-slate-600">{{ m.category }}</td>
+                    <td class="px-4 py-4 align-top text-slate-700">{{ '%.2f'|format(m.price) }}</td>
+                    <td class="px-4 py-4 align-top">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" data-id="{{ m.menu_id }}" onclick="toggleEdit(this.dataset.id)" class="rounded-full bg-amber-500 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-600">แก้ไข</button>
+                        <form onsubmit="return confirm('ยืนยันการลบเมนูนี้?');" action="/menu/{{ m.menu_id }}/delete" method="post">
+                          <button type="submit" class="rounded-full bg-red-500 px-3 py-2 text-xs font-semibold text-white hover:bg-red-600">ลบ</button>
+                        </form>
+                      </div>
+                      <form id="edit-form-{{ m.menu_id }}" action="/menu/{{ m.menu_id }}/update" method="post" class="mt-4 hidden space-y-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                          <input name="menu_name" value="{{ m.menu_name }}" class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none" required />
+                          <select name="category" class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none">
+                            {% for category in categories %}
+                              {% if category == m.category %}
+                                <option value="{{ category }}" selected>{{ category }}</option>
+                              {% else %}
+                                <option value="{{ category }}">{{ category }}</option>
+                              {% endif %}
+                            {% endfor %}
+                          </select>
+                          <input name="image_url" value="{{ m.image_url }}" placeholder="ลิงก์รูปภาพ (URL)" class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none" />
+                          <input name="price" value="{{ '%.2f'|format(m.price) }}" class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none" required />
+                        </div>
+                        <div class="text-right">
+                          <button type="submit" class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">บันทึก</button>
+                        </div>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-slate-500">ไม่มีเมนูในระบบ</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      function toggleEdit(id) {
+        const f = document.getElementById('edit-form-' + id);
+        if (!f) return;
+        f.classList.toggle('hidden');
+      }
+    </script>
+  </body>
+</html>
